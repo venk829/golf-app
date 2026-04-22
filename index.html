@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Golf Rewards Platform</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(135deg, #f2f3f6, #dadce2);
+  font-family: 'Segoe UI', sans-serif;
+  color: #f81206;
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 30px;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  color: #d40303;
+}
+
+.header p {
+  color: #cf2a2a;
+}
+
+/* Layout */
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+  padding: 30px;
+}
+
+/* Card */
+.card {
+  position: relative;
+  background: linear-gradient(145deg, rgba(208, 106, 4, 0.968), rgba(213, 131, 9, 0.9));
+  border-radius: 18px;
+  padding: 22px;
+  border: 1px solid rgba(148,163,184,0.15);
+  box-shadow: 
+    0 10px 25px rgba(206, 21, 21, 0.6),
+    inset 0 0 0 1px rgba(222, 18, 11, 0.632);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  padding: 1px;
+  background: linear-gradient(120deg, #3b82f6, #8b5cf6, #06b6d4);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 
+    0 20px 40px rgba(211, 178, 178, 0.8),
+    0 0 20px rgba(99,102,241,0.3);
+}
+
+.card h3 {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  color: #93c5fd;
+}
+
+/* Inputs */
+input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(153, 82, 19, 0.2);
+  background: #cccdd5;
+  color: white;
+}
+
+/* Buttons */
+button {
+  margin-top: 15px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(99,102,241,0.6);
+}
+
+/* Output */
+#result, #scoresList {
+  margin-top: 10px;
+  color: #cbd5f5;
+}
+
+/* Admin */
+pre {
+  text-align: left;
+  max-height: 200px;
+  overflow: auto;
+  background: rgba(2,6,23,0.9);
+  padding: 10px;
+  border-radius: 10px;
+  color: #a5b4fc;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>🏆 Golf Rewards Platform</h1>
+  <p>Track Scores • Win Draws • Support Charity</p>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h3>👤 Create Account</h3>
+    <input id="username" placeholder="Username">
+    <button onclick="signup()">Signup</button>
+  </div>
+
+  <div class="card">
+    <h3>📊 Add Score</h3>
+    <input id="score" type="number" min="1" max="45" placeholder="Score">
+    <input id="date" type="date">
+    <button onclick="addScore()">Submit Score</button>
+  </div>
+
+  <div class="card">
+    <h3>📈 Your Scores</h3>
+    <div id="scoresList"></div>
+  </div>
+
+  <div class="card">
+    <h3>🎯 Monthly Draw</h3>
+    <button onclick="draw()">Run Draw</button>
+    <div id="result"></div>
+  </div>
+
+  <div class="card">
+    <h3>🛠 Admin Panel</h3>
+    <button onclick="viewAdmin()">View Data</button>
+    <pre id="adminData"></pre>
+  </div>
+
+</div>
+
+<script>
+async function signup() {
+  const res = await fetch("http://localhost:3000/signup", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ username: username.value })
+  });
+  alert(await res.text());
+}
+
+async function addScore() {
+  const res = await fetch("http://localhost:3000/add-score", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: username.value,
+      score: score.value,
+      date: date.value
+    })
+  });
+
+  const data = await res.json();
+
+  scoresList.innerHTML = data.map(s =>
+    `⭐ ${s.score}<br><small>${s.date}</small><hr>`
+  ).join("");
+}
+
+async function draw() {
+  const res = await fetch("http://localhost:3000/draw");
+  const data = await res.json();
+
+  let html = `<b>Draw Numbers:</b><br>${data.drawNumbers.join(", ")}<br><br>`;
+
+  if (data.winners.length === 0) {
+    html += "❌ No winners";
+  } else {
+    html += "<b>🏆 Winners:</b><br>";
+    data.winners.forEach(w => {
+      html += `✅ ${w.username} (${w.matches} matches)<br>`;
+    });
+  }
+
+  result.innerHTML = html;
+}
+
+async function viewAdmin() {
+  const res = await fetch("http://localhost:3000/admin");
+  const data = await res.json();
+  adminData.innerText = JSON.stringify(data, null, 2);
+}
+</script>
+
+</body>
+</html>
