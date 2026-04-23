@@ -6,6 +6,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static files (index.html)
 app.use(express.static(__dirname));
 
 let users = [];
@@ -36,7 +38,6 @@ app.post("/add-score", (req, res) => {
 
   if (!date) return res.send("Date required");
 
-  // Prevent past date
   const today = new Date().toISOString().split("T")[0];
   if (date < today) {
     return res.send("Past dates not allowed");
@@ -91,11 +92,17 @@ app.get("/admin", (req, res) => {
   res.json(users);
 });
 
-// Serve UI
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// Render port
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server running");
 });

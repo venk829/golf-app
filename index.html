@@ -1,139 +1,192 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Golf Rewards Platform</title>
+<title>Golf Rewards Dashboard</title>
 
 <style>
 * {
   margin: 0;
   padding: 0;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
 body {
   font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #e38fa1, #d496b2);
-  color: #e2e8f0;
+  background: #f1f5f9;
+  color: #1e293b;
+  display: flex;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  background: #1e293b;
+  color: white;
+  height: 100vh;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  margin-bottom: 20px;
+}
+
+.sidebar button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: #334155;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+/* Main */
+.main {
+  flex: 1;
+  padding: 20px;
 }
 
 /* Header */
 .header {
-  text-align: center;
-  padding: 30px;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.header h1 {
-  color: #f3f4f6;
-}
-
-/* Layout */
-.container {
+/* Cards */
+.grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
   gap: 20px;
-  padding: 20px;
 }
 
-/* Card */
 .card {
-  background: rgba(15,23,42,0.9);
-  border-radius: 15px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  overflow: hidden; 
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
 }
 
-/* Inputs & Buttons */
-input, button {
-  width: 100%;
-  max-width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border-radius: 8px;
-  border: none;
-  display: block;
-}
-
-/* Input style */
+/* Inputs */
 input {
-  background: #020617;
-  color: white;
-  border: 1px solid rgba(148,163,184,0.2);
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
 }
 
-/* Button style */
-button {
-  background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+/* Button */
+.btn {
+  margin-top: 10px;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  background: #2563eb;
   color: white;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
-  transition: 0.3s;
 }
 
-button:hover {
-  transform: scale(1.03);
-}
-
-/* Output */
-#scoresList, #result {
+/* Chart */
+.chart {
+  height: 150px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
   margin-top: 10px;
 }
+
+.bar {
+  width: 30px;
+  background: #2563eb;
+  text-align: center;
+  color: white;
+  font-size: 10px;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <h1>🏆 Golf Rewards Platform</h1>
+<div class="sidebar">
+  <h2>🏌️ Golf App</h2>
+  <button onclick="show('dashboard')">Dashboard</button>
+  <button onclick="show('add')">Add Score</button>
+  <button onclick="show('draw')">Draw</button>
 </div>
 
-<div class="container">
+<div class="main">
 
-  <div class="card">
-    <h3>👤 Signup</h3>
-    <input id="username" placeholder="Enter username">
-    <button onclick="signup()">Signup</button>
+  <div class="header">
+    <h2>Golf Rewards Dashboard</h2>
   </div>
 
-  <div class="card">
-    <h3>📊 Add Score</h3>
-    <input id="score" type="number" min="1" max="45" placeholder="Enter score (1-45)">
-    <input id="date" type="date">
-    <button onclick="addScore()">Submit</button>
+  <!-- Dashboard -->
+  <div id="dashboard">
+    <div class="grid">
+      <div class="card">
+        <h3>Total Scores</h3>
+        <p id="total">0</p>
+      </div>
+
+      <div class="card">
+        <h3>Last Score</h3>
+        <p id="last">-</p>
+      </div>
+
+      <div class="card">
+        <h3>Score Chart</h3>
+        <div id="chart" class="chart"></div>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>📈 Your Scores</h3>
-    <div id="scoresList"></div>
+  <!-- Add Score -->
+  <div id="add" style="display:none;">
+    <div class="card">
+      <h3>Add Score</h3>
+      <input id="username" placeholder="Username">
+      <input id="score" type="number">
+      <input id="date" type="date">
+      <button class="btn" onclick="addScore()">Submit</button>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>🎯 Draw</h3>
-    <button onclick="draw()">Run Draw</button>
-    <div id="result"></div>
+  <!-- Draw -->
+  <div id="draw" style="display:none;">
+    <div class="card">
+      <h3>Run Draw</h3>
+      <button class="btn" onclick="draw()">Run</button>
+      <div id="result"></div>
+    </div>
   </div>
 
 </div>
 
 <script>
 
-// ✅ Prevent past dates
-window.onload = () => {
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("date").setAttribute("min", today);
-};
+// navigation
+function show(section) {
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("add").style.display = "none";
+  document.getElementById("draw").style.display = "none";
 
-// Signup
-async function signup() {
-  const res = await fetch("/signup", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username: username.value })
-  });
-  alert(await res.text());
+  document.getElementById(section).style.display = "block";
 }
 
-// Add Score
+// prevent past dates
+window.onload = () => {
+  const today = new Date().toISOString().split("T")[0];
+  date.min = today;
+};
+
+let scores = [];
+
+// add score
 async function addScore() {
   const res = await fetch("/add-score", {
     method: "POST",
@@ -146,25 +199,37 @@ async function addScore() {
   });
 
   const data = await res.json();
-  scoresList.innerHTML = data.map(s => `⭐ ${s.score} (${s.date})`).join("<br>");
+  scores = data;
+  updateDashboard();
 }
 
-// Draw
+// update dashboard
+function updateDashboard() {
+  total.innerText = scores.length;
+  last.innerText = scores.length ? scores[scores.length - 1].score : "-";
+
+  chart.innerHTML = "";
+
+  scores.forEach(s => {
+    let bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.height = (s.score * 2) + "px";
+    bar.innerText = s.score;
+    chart.appendChild(bar);
+  });
+}
+
+// draw
 async function draw() {
   const res = await fetch("/draw");
   const data = await res.json();
 
-  let text = `<b>Draw Numbers:</b> ${data.drawNumbers.join(", ")}<br>`;
-
-  if (data.winners.length === 0) {
-    text += "❌ No winners";
-  } else {
-    data.winners.forEach(w => {
-      text += `<br>🏆 ${w.username} (${w.matches} matches)`;
-    });
-  }
-
-  result.innerHTML = text;
+  result.innerHTML =
+    "Draw: " + data.drawNumbers.join(", ") +
+    "<br>" +
+    (data.winners.length
+      ? data.winners.map(w => w.username).join("<br>")
+      : "No winners");
 }
 
 </script>
